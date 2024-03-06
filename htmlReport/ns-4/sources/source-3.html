@@ -1,0 +1,89 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > TransferRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.dws.challenge.repository</a>
+</div>
+
+<h1>Coverage Summary for Class: TransferRepository (com.dws.challenge.repository)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">TransferRepository$MockitoMock$IAdCfyq2</td>
+  </tr>
+  <tr>
+    <td class="name">TransferRepository$MockitoMock$IAdCfyq2$auxiliary$7CNcTODq</td>
+  </tr>
+  <tr>
+    <td class="name">TransferRepository$MockitoMock$IAdCfyq2$auxiliary$lK15pWV6</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.dws.challenge.repository;
+&nbsp;
+&nbsp;import com.dws.challenge.domain.Transfer;
+&nbsp;
+&nbsp;public interface TransferRepository {
+&nbsp;
+&nbsp;    void createTransferEntry(Transfer transfer, int transferReference) throws Exception;
+&nbsp;
+&nbsp;    Transfer getTransfer(int transferReference);
+&nbsp;
+&nbsp;    Transfer updateTransfer(Transfer transfer, int transferReference);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-03-06 10:16</div>
+</div>
+</body>
+</html>

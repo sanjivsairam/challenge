@@ -1,0 +1,222 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > TransferService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.dws.challenge.service</a>
+</div>
+
+<h1>Coverage Summary for Class: TransferService (com.dws.challenge.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TransferService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (33/33)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.dws.challenge.service;
+&nbsp;
+&nbsp;import com.dws.challenge.domain.Account;
+&nbsp;import com.dws.challenge.domain.Transfer;
+&nbsp;import com.dws.challenge.exception.AccountException;
+&nbsp;import com.dws.challenge.exception.InsufficientFundsException;
+&nbsp;import com.dws.challenge.repository.AccountsRepository;
+&nbsp;import com.dws.challenge.repository.TransferRepository;
+&nbsp;import com.dws.challenge.util.RandomNumberGen;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.util.concurrent.atomic.AtomicInteger;
+&nbsp;
+&nbsp;/**
+&nbsp; * TransferService is a service class that provides business logic for transferring money between accounts.
+&nbsp; * It uses the AccountOperationService to perform the actual debit and credit operations.
+&nbsp; */
+&nbsp;public class TransferService {
+&nbsp;
+<b class="fc">&nbsp;    private final AtomicInteger transactionCounter = new AtomicInteger();</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Autowired dependency injection for the AccountsRepository and TransferRepository.
+&nbsp;     */
+&nbsp;    private final AccountsRepository accountsRepository;
+&nbsp;
+&nbsp;    private final TransferRepository transferRepository;
+&nbsp;
+&nbsp;    @Autowired
+<b class="fc">&nbsp;    public TransferService(AccountsRepository accountsRepository, TransferRepository transferRepository) {</b>
+<b class="fc">&nbsp;        this.accountsRepository = accountsRepository;</b>
+<b class="fc">&nbsp;        this.transferRepository = transferRepository;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Method to transfer money between two accounts. It first validates the transaction, then creates a transfer
+&nbsp;     * record in the database, performs the debit and credit operations, and updates the transfer record with the
+&nbsp;     * final status. If an exception occurs, the transfer record is updated with the failure status and an exception
+&nbsp;     * is thrown.
+&nbsp;     *
+&nbsp;     * @param transfer the Transfer object containing the details of the transfer
+&nbsp;     * @throws InsufficientFundsException if the from account does not have sufficient funds
+&nbsp;     * @throws AccountException if the from and to accounts are the same or if there is a technical error
+&nbsp;     */
+&nbsp;    public void transferMoney(final Transfer transfer) throws InsufficientFundsException, AccountException {
+<b class="fc">&nbsp;        String fromAccountId = transfer.getFromAccId();</b>
+<b class="fc">&nbsp;        String toAccountId = transfer.getToAccId();</b>
+<b class="fc">&nbsp;        BigDecimal amount = transfer.getTransferAmount();</b>
+&nbsp;        Account fromAccount;
+&nbsp;        Account toAccount;
+&nbsp;
+<b class="fc">&nbsp;        synchronized (this) {</b>
+<b class="fc">&nbsp;            fromAccount = accountsRepository.getAccount(fromAccountId);</b>
+<b class="fc">&nbsp;            toAccount = accountsRepository.getAccount(toAccountId);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+<b class="fc">&nbsp;        validateTransaction(fromAccount, toAccount, amount, fromAccountId);</b>
+<b class="fc">&nbsp;        transactionCounter.set(RandomNumberGen.getRandomNum());</b>
+<b class="fc">&nbsp;        int transactionRefNum = transactionCounter.incrementAndGet();</b>
+<b class="fc">&nbsp;        processTransaction(transfer, transactionRefNum, fromAccount, amount, toAccount);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Method to perform the actual transfer of money between the accounts. It first creates a transfer record in
+&nbsp;     * the database with the initial status, then performs the debit and credit operations using the
+&nbsp;     * AccountOperationService. If an exception occurs, it updates the transfer record with the failure status and
+&nbsp;     * throws an exception.
+&nbsp;     *
+&nbsp;     * @param transfer the Transfer object containing the details of the transfer
+&nbsp;     * @param transactionRefNum the reference number of the transaction
+&nbsp;     * @param fromAccount the from account
+&nbsp;     * @param amount the amount to be transferred
+&nbsp;     * @param toAccount the to account
+&nbsp;     * @throws AccountException if there is a technical error
+&nbsp;     */
+&nbsp;    private void processTransaction(Transfer transfer, int transactionRefNum, Account fromAccount, BigDecimal amount, Account toAccount) throws AccountException {
+&nbsp;        try {
+<b class="fc">&nbsp;            transfer.setTransactionReference(transactionRefNum);</b>
+<b class="fc">&nbsp;            transfer.setStatus(&quot;Initiated&quot;);</b>
+<b class="fc">&nbsp;            transferRepository.createTransferEntry(transfer, transactionRefNum);</b>
+&nbsp;
+<b class="fc">&nbsp;            AccountOperationSevice.debit(fromAccount, amount);</b>
+<b class="fc">&nbsp;            AccountOperationSevice.credit(toAccount, amount);</b>
+&nbsp;
+<b class="fc">&nbsp;            transfer.setStatus(&quot;Success&quot;);</b>
+<b class="fc">&nbsp;            transferRepository.updateTransfer(transfer, transactionRefNum);</b>
+<b class="fc">&nbsp;        } catch (Exception e) {</b>
+<b class="fc">&nbsp;            transfer.setStatus(&quot;Failed&quot;);</b>
+<b class="fc">&nbsp;            transferRepository.updateTransfer(transfer, transactionRefNum);</b>
+<b class="fc">&nbsp;            throw new AccountException(&quot;Transfer failure due to technical error.&quot;);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Method to validate the transaction. It checks if the from and to accounts are the same, if the from account
+&nbsp;     * has sufficient funds, and if the from and to accounts are valid. If any of these checks fail, an exception is
+&nbsp;     * thrown.
+&nbsp;     *
+&nbsp;     * @param fromAccount the from account
+&nbsp;     * @param toAccount the to account
+&nbsp;     * @param amount the amount to be transferred
+&nbsp;     * @param fromAccountId the ID of the from account
+&nbsp;     * @throws InsufficientFundsException if the from account does not have sufficient funds
+&nbsp;     * @throws AccountException if the from and to accounts are the same or if they are not valid
+&nbsp;     */
+&nbsp;    private static void validateTransaction(Account fromAccount, Account toAccount, BigDecimal amount, String fromAccountId) throws InsufficientFundsException, AccountException {
+<b class="fc">&nbsp;        if (fromAccount == null || toAccount == null) {</b>
+<b class="fc">&nbsp;            throw new AccountException(&quot;Invalid from or to Account.&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (fromAccount.equals(toAccount)) {</b>
+<b class="fc">&nbsp;            throw new AccountException(&quot;Cannot transfer money to and from the same account.&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (fromAccount.getBalance().compareTo(amount) &lt; 0) {</b>
+<b class="fc">&nbsp;            throw new InsufficientFundsException(&quot;Insufficient funds in account &quot; + fromAccountId);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-03-06 10:16</div>
+</div>
+</body>
+</html>
