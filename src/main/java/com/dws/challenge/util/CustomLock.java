@@ -2,26 +2,28 @@ package com.dws.challenge.util;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class CustomLock<K> {
+    Logger logger = Logger.getLogger(String.valueOf(CustomLock.class));
+    private final Set<K> lockedKeys = new HashSet<>();
 
-    private /*static*/ final Set<K> lockedKeys = new HashSet<>();
-
-    public /*static*/ void lock(K key) throws InterruptedException {
+    public void lock(K key) throws InterruptedException {
         synchronized (lockedKeys) {
 
             while (!lockedKeys.add(key)) {
-                System.out.println("Waiting for the key " + key);
+                logger.log(Level.INFO,() -> "Waiting for the key " + key);
                 lockedKeys.wait();
             }
-            System.out.println("Locking key " + key);
+            logger.log(Level.INFO,() -> "Locking key " + key);
         }
     }
 
-    public /*static*/ void unlock(K key) {
+    public void unlock(K key) {
         synchronized (lockedKeys) {
             lockedKeys.remove(key);
-            System.out.println("Releasing key " + key);
+            logger.log(Level.INFO,() -> "Releasing key " + key);
             lockedKeys.notifyAll();
         }
     }
