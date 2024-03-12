@@ -6,6 +6,7 @@ import com.dws.challenge.exception.AccountException;
 import com.dws.challenge.exception.InsufficientFundsException;
 import com.dws.challenge.repository.AccountsRepository;
 import com.dws.challenge.repository.TransferRepository;
+import com.dws.challenge.service.NotificationService;
 import com.dws.challenge.service.TransferService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,13 +23,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class TransferServiceTest {
+class TransferServiceTest {
 
     @Mock
     private AccountsRepository accountsRepository;
 
     @Mock
     private TransferRepository transferRepository;
+
+    @Mock
+    NotificationService notificationService;
 
     @InjectMocks
     private TransferService transferService;
@@ -47,7 +51,7 @@ public class TransferServiceTest {
     }
 
     @Test
-    public void testProcessTransaction() throws AccountException, InsufficientFundsException {
+    void testProcessTransaction() throws AccountException, InsufficientFundsException {
         when(accountsRepository.getAccount(anyString())).thenReturn(fromAccount, toAccount);
 
         transferService.transferMoney(transfer);
@@ -56,7 +60,7 @@ public class TransferServiceTest {
         assertEquals(toAccount.getBalance().doubleValue(), new BigDecimal("6000.00").doubleValue());
     }
     @Test
-    public void testFailedTransaction() throws Exception {
+    void testFailedTransaction() throws Exception {
         when(accountsRepository.getAccount(anyString())).thenReturn(fromAccount, toAccount);
 
         doThrow(new Exception()).when(transferRepository).createTransferEntry(any(),anyInt());
@@ -68,7 +72,7 @@ public class TransferServiceTest {
     }
 
     @Test
-    public void testProcessFailedSameAccTransaction() throws AccountException, InsufficientFundsException {
+    void testProcessFailedSameAccTransaction() throws AccountException, InsufficientFundsException {
         when(accountsRepository.getAccount(anyString())).thenReturn(fromAccount, fromAccount);
         Exception exception = assertThrows(AccountException.class, () ->
                 transferService.transferMoney(transfer));
@@ -76,7 +80,7 @@ public class TransferServiceTest {
     }
 
     @Test
-    public void testProcessInvalidTransaction() throws AccountException, InsufficientFundsException {
+    void testProcessInvalidTransaction() throws AccountException, InsufficientFundsException {
         when(accountsRepository.getAccount(anyString())).thenReturn(fromAccount, null);
 
         Exception exception = assertThrows(AccountException.class, () ->
@@ -85,7 +89,7 @@ public class TransferServiceTest {
     }
 
     @Test
-    public void testProcessInsufficientFund() throws AccountException, InsufficientFundsException {
+    void testProcessInsufficientFund() throws AccountException, InsufficientFundsException {
         Account fromAccount = new Account("12345678",new BigDecimal("0.00"));
         when(accountsRepository.getAccount(anyString())).thenReturn(fromAccount, toAccount);
 
