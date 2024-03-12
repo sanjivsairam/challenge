@@ -6,6 +6,7 @@ import com.dws.challenge.exception.AccountException;
 import com.dws.challenge.exception.InsufficientFundsException;
 import com.dws.challenge.repository.AccountsRepository;
 import com.dws.challenge.repository.TransferRepository;
+import com.dws.challenge.util.CustomLock;
 import com.dws.challenge.util.RandomNumberGen;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
 
 /**
  * TransferService is a service class that provides business logic for transferring money between accounts.
@@ -25,10 +27,15 @@ public class TransferService {
 
     private final AtomicInteger transactionCounter = new AtomicInteger();
 
+    private CustomLock<String> keyLock = new CustomLock<>();
+
     /**
      * Autowired dependency injection for the AccountsRepository and TransferRepository.
      */
     private final AccountsRepository accountsRepository;
+
+    int concurrencyLevel = 1 << 8;
+    final Lock[] locks = new Lock[concurrencyLevel];
 
     private final TransferRepository transferRepository;
     private final NotificationService notificationService;
@@ -57,15 +64,29 @@ public class TransferService {
         Account fromAccount;
         Account toAccount;
 
-        synchronized (this) {
+        //Lock lock = locks[fromAccountId.hashCode() & (concurrencyLevel - 1)];
+        try {
+            keyLock.lock(fromAccountId);
+            keyLock.lock(toAccountId);
             fromAccount = accountsRepository.getAccount(fromAccountId);
             toAccount = accountsRepository.getAccount(toAccountId);
+            //lock.lock();
+            //Thread.currentThread().sleep(10000);
+            validateTransaction(fromAccount, toAccount, amount, fromAccountId);
+            transactionCounter.set(RandomNumberGen.getRandomNum());
+            int transactionRefNum = transactionCounter.incrementAndGet();
+            processTransaction(transfer, transactionRefNum, fromAccount, amount, toAccount);
+        }
+        catch(InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AccountException("Transfer failure due to technical error."+e);
+        }
+        finally {
+            //  lock.unlock();
+            keyLock.unlock(fromAccountId);
+            keyLock.unlock(toAccountId);
         }
 
-        validateTransaction(fromAccount, toAccount, amount, fromAccountId);
-        transactionCounter.set(RandomNumberGen.getRandomNum());
-        int transactionRefNum = transactionCounter.incrementAndGet();
-        processTransaction(transfer, transactionRefNum, fromAccount, amount, toAccount);
     }
 
     /**
