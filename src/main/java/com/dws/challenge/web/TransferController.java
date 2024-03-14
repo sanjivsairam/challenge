@@ -46,17 +46,22 @@ public class TransferController {
      * @return a response with a status code of 200 (OK) if the transfer was successful, or an error code if there was an issue
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> transfer(@RequestBody @Valid Transfer transfer) throws InsufficientFundsException, AccountException {
+    public ResponseEntity<String> transfer(@RequestBody @Valid Transfer transfer) throws InsufficientFundsException, AccountException {
         log.info("Transfer starts: {}", transfer);
-        Account fromAcc = accountsService.getAccount(transfer.getFromAccId());
-        Account toAcc = accountsService.getAccount(transfer.getToAccId());
-        log.info("fromAcc account balance: {}", fromAcc.getBalance().doubleValue());
-        log.info("toAcc account balance: {}", toAcc.getBalance().doubleValue());
-        transferService.transferMoney(transfer);
-        log.info("Balance after transaction: ");
-        log.info("fromAcc account balance: {}", fromAcc.getBalance().doubleValue());
-        log.info("toAcc account balance: {}", toAcc.getBalance().doubleValue());
-        return ResponseEntity.status(HttpStatus.OK).build();
+        try {
+            Account fromAcc = accountsService.getAccount(transfer.getFromAccId());
+            Account toAcc = accountsService.getAccount(transfer.getToAccId());
+            log.info("fromAcc account balance: {}", fromAcc.getBalance().doubleValue());
+            log.info("toAcc account balance: {}", toAcc.getBalance().doubleValue());
+            transferService.transferMoney(transfer);
+            log.info("Balance after transaction: ");
+            log.info("fromAcc account balance: {}", fromAcc.getBalance().doubleValue());
+            log.info("toAcc account balance: {}", toAcc.getBalance().doubleValue());
+            return ResponseEntity.status(HttpStatus.OK).build();
+        }
+        catch(InsufficientFundsException | AccountException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**

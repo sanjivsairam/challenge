@@ -1,0 +1,16 @@
+Summary of work done:
+1) Created a simple transfer class to transfer amount between accounts
+2) Before transfer, few simple validations like acc is not empty and insufficient balance
+3) While transferring amount, from account and to account will be locked and will be released only when successfully debitted.
+4) Simple locking strategy created and only one thread will be using one account at a time and other threads will be waiting if need to use the same account
+5) Unrelated accounts can transfer amount even though there is a thread already running for a different account
+6) After successful / failed transactions, users will be notified with message
+7) Code covered with JUNIT cases including successful and failure scenarios.
+
+
+What could be done if necessary time is provided:
+1) More sophisticated locks like reentrant lock with countdown latch can be implemented.
+2) Locks strategy like Optimistic / pessimistic locks can be applied.
+3) Proper validations on accounts can be applied such as maximum amount, minimum amount, charges calculations
+4) Currency code implementation for all the transactions with currency conversion.
+5) Timezone implementation for each transactions based on locale.
